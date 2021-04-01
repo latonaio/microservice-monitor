@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microservice-monitor
+  labels:
+    app: microservice-monitor
+spec:
+  selector:
+    matchLabels:
+      app: microservice-monitor
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: microservice-monitor
+    spec:
+      serviceAccountName: controller-serviceaccount
+      containers:
+        - image: latonaio/microservice-monitor:latest
+          name: microservice-monitor
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: "100Mi"
+            requests:
+              cpu: "0.25"
+              memory: "50Mi"
+
