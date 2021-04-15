@@ -14,7 +14,7 @@ spec:
       labels:
         app: microservice-monitor
     spec:
-      serviceAccountName: controller-serviceaccount
+      serviceAccountName: aion-default
       containers:
         - image: latonaio/microservice-monitor:latest
           name: microservice-monitor
