@@ -1,0 +1,9 @@
+device:
+  name: snake
+  addr: 192.168.128.243
+alert:
+- name: microservice-monitor
+  threshold:
+    cpu: 20
+    memory: 50
+

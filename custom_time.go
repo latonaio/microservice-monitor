@@ -13,3 +13,7 @@ func (j jsonTime) format() string {
 func (j jsonTime) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + j.format() + `"`), nil
 }
+
+func (j jsonTime) Unix() int64 {
+	return j.Time.Unix()
+}

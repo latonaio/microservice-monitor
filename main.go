@@ -13,35 +13,33 @@ import (
 	metrics "k8s.io/metrics/pkg/client/clientset/versioned"
 )
 
-func collectMetrics(client *metrics.Clientset, now time.Time, monitorWindow map[string]*MetricsWindow) {
+func collectMetrics(client *metrics.Clientset, now time.Time, alerts []*Alert, env Env, alertSetting AlertSetting) {
 	pods, err := client.MetricsV1beta1().PodMetricses("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	microservices := []*Microservice{}
+	microservices := []Microservice{}
 	for _, pod := range pods.Items {
-		containers := []*Container{}
+		containers := []Container{}
 		microserviceName := pod.ObjectMeta.Name
 		for _, container := range pod.Containers {
 			containerName := container.Name
 			cpu := container.Usage["cpu"]
 			memory := container.Usage["memory"]
-			containers = append(containers, NewContainer(containerName, &Metrics{CPU: cpu.MilliValue(), Memory: memory.Value()}))
+			containers = append(containers, NewContainer(containerName, Metrics{CPU: cpu.MilliValue(), Memory: memory.Value()}))
 		}
 		microservices = append(microservices, NewMicroservice(microserviceName, containers, now))
 	}
 
 	for _, microservice := range microservices {
-		mw, ok := monitorWindow[microservice.Name]
-		if !ok {
-			m := NewMetricsWindow(5, 10, 50*MiB)
-			m.Push(*microservice.Metrics)
-			monitorWindow[microservice.Name] = m
-		} else {
-			mw.Push(*microservice.Metrics)
-			floatMetrics, err := mw.Alert()
+
+		if a, ok := FindAlert(alerts, microservice.Name); ok {
+			a.Window.Push(microservice.Metrics)
+			var jt jsonTime
+			jt.Time = now
+			floatMetrics, err := a.Alert(jt, env, alertSetting)
 			if err != nil {
 				fmt.Printf("%v\n", err)
 				averageMetrics := NewAverageMetrics(microservice.Name, now, floatMetrics)
@@ -62,6 +60,17 @@ func collectMetrics(client *metrics.Clientset, now time.Time, monitorWindow map[
 
 func main() {
 	fmt.Printf("start\n")
+
+	env, err := GetEnv()
+	if err != nil {
+		return
+	}
+
+	alertSetting, err := LoadAlertSetting(env)
+	if err != nil {
+		return
+	}
+
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		fmt.Println(err)
@@ -74,13 +83,13 @@ func main() {
 		return
 	}
 
-	monitorWindow := map[string]*MetricsWindow{}
+	alert := MakeAlert(alertSetting, env)
 
 	signalCh := make(chan os.Signal, 1)
 	defer close(signalCh)
 	signal.Notify(signalCh, syscall.SIGTERM)
 
-	t := time.NewTicker(5 * time.Second)
+	t := time.NewTicker(time.Second * time.Duration(env.Interval))
 	defer t.Stop()
 
 	for {
@@ -88,7 +97,7 @@ func main() {
 		case <-signalCh:
 			goto END
 		case now := <-t.C:
-			collectMetrics(client, now, monitorWindow)
+			collectMetrics(client, now, alert, env, alertSetting)
 		}
 	}
 END:
