@@ -3,7 +3,7 @@
 microservice-monitorは、Kubernetes上で動いているマイクロサービスのCPU/Memory使用状況を収集するサービスです。
 
 
-## 概要
+# 概要
 
 microservice-monitorは、一定期間ごとにKubernetesのmertics-serverから各マイクロサービスのCPU/Memory使用状況を取得します。  
 取得するCPU/Memoryは、Pod単位とContainer単位での取得が可能です。  
@@ -11,30 +11,28 @@ microservice-monitorは、一定期間ごとにKubernetesのmertics-serverから
 
 また、microservice-monitorにはアラート機能があり、一定の閾値を超えた場合にアラートを出すことができます。
 
-## 動作環境
+# 動作環境
 
-microservice-monitorは、Kubernetesが動作する環境であればどこでも動作可能です。   
+microservice-monitorは、Kubernetesが動作する環境であればどこでも動作可能です。
 ただし、前提としてKubernetes上にmetrics-serverがデプロイされている必要があります。
 
-## セットアップ
+# セットアップ
 
-以下のコマンドでDockerイメージを作成します。
+以下のコマンドでDockerイメージの作成ができます。
 
 ```
-$ cd path/to/microservice-monitor
 $ make docker-build
 ```
 
-## 起動方法
+# 起動方法
 
-以下のコマンドでKubernetes上にデプロイします。
+以下のコマンドでK8s上にデプロイできます。
 
 ```
-$ cd path/to/microservice-monitor
 $ kubectl apply -f deployments
 ```
 
-## 環境変数
+# 環境変数
 
 |環境変数名|値|
 |----------|--|
@@ -43,9 +41,9 @@ $ kubectl apply -f deployments
 |CONFIG_DIR|path to config file dir|
 |SLACK_URL|slack incoming url|
 
-また、アラート通知を行いたいマイクロサービスをYAMLファイルで定義することができます。詳細はexample/alert-setting.ymlを参照してください
+また、アラート通知を行いたいマイクロサービスをYAMLファイルで定義することができます。詳細はexampl/alert-setting.ymlを参照してください
 
-## CPU/Memory使用状況のログ
+# CPU/Memory使用状況のログ
 
 以下の形式でマイクロサービス単位のCPU/Memory使用状況のログが出力されます。
 
